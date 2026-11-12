@@ -42,9 +42,33 @@ export const site = {
 
 export type Site = typeof site;
 
-export const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-).replace(/\/$/, "");
+const PRODUCTION_SITE_URL = "https://paul-arrey-agbor-portfolio.vercel.app";
+
+const isUsableSiteUrl = (value: string): boolean => {
+  if (!/^https?:\/\//i.test(value)) return false;
+  try {
+    return new URL(value).hostname.length > 0;
+  } catch {
+    return false;
+  }
+};
+
+const resolveSiteUrl = (): string => {
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL?.trim(),
+    PRODUCTION_SITE_URL,
+  ];
+
+  for (const candidate of candidates) {
+    if (candidate && isUsableSiteUrl(candidate)) {
+      return candidate.replace(/\/+$/, "");
+    }
+  }
+
+  return PRODUCTION_SITE_URL;
+};
+
+export const siteUrl = resolveSiteUrl();
 
 export const absoluteUrl = (path: string): string =>
   new URL(path, `${siteUrl}/`).toString();
